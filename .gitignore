@@ -19,6 +19,12 @@
 
 # production
 /build
+/dist
+.r2-upload-*.json
+
+# local paper archive; upload these to Cloudflare R2 instead
+/A-Level
+/GCSE
 
 # misc
 .DS_Store
@@ -32,6 +38,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel

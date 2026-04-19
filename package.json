@@ -1,8 +1,11 @@
 {
-  "name": "nextjs",
+  "name": "alora-exam-api",
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "catalog": "node scripts/generate-public-catalog.mjs",
+    "upload:r2": "bash scripts/upload-r2.sh",
+    "upload:r2:wrangler": "node scripts/upload-r2-wrangler.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -21,6 +24,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.83.0"
   }
 }

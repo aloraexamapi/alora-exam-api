@@ -1,36 +1,161 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Alora Exam API
 
-## Getting Started
+Vercel-hosted JSON API for the Alora GCSE and A-Level paper catalogue.
 
-First, run the development server:
+This repo does not store PDFs. PDFs should live in a public Cloudflare R2 bucket, and this app reads the R2-hosted `catalog.json`.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Architecture
+
+```text
+Cloudflare R2 public bucket
+  A-Level/
+  GCSE/
+  catalog.json
+
+Vercel Next.js app
+  /api/health
+  /api/pairs
+  /api/papers
+  /api/metadata
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Generate `catalog.json`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Run this locally from the repo after cloning:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+PAPERS_ROOT=/Users/paramveer/Desktop/Alora_PastPaperApi \
+PUBLIC_PAPERS_BASE_URL=https://papers.yourdomain.com \
+npm run catalog
+```
 
-## Learn More
+This writes:
 
-To learn more about Next.js, take a look at the following resources:
+```text
+dist/catalog.json
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Upload `dist/catalog.json`, `A-Level/`, and `GCSE/` to the root of your R2 bucket.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Upload To Cloudflare R2
 
-## Deploy on Vercel
+The Cloudflare dashboard only supports small manual uploads. Use the S3-compatible API through AWS CLI for the full archive.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Install AWS CLI:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+brew install awscli
+```
+
+Create an R2 API token in Cloudflare:
+
+```text
+Cloudflare Dashboard
+-> R2 Object Storage
+-> Manage R2 API Tokens
+-> Create API token
+```
+
+Then configure a local profile:
+
+```bash
+aws configure --profile alora-r2
+```
+
+Use:
+
+```text
+AWS Access Key ID: your R2 access key
+AWS Secret Access Key: your R2 secret key
+Default region name: auto
+Default output format: json
+```
+
+Run the upload script:
+
+```bash
+R2_BUCKET=alora-papers \
+R2_ACCOUNT_ID=your_cloudflare_account_id \
+PUBLIC_PAPERS_BASE_URL=https://pub-your-r2-url.r2.dev \
+npm run upload:r2
+```
+
+This uploads:
+
+```text
+GCSE/
+A-Level/
+catalog.json
+```
+
+## Vercel Environment Variables
+
+```text
+PAPERS_CATALOG_URL=https://papers.yourdomain.com/catalog.json
+NEXT_PUBLIC_PAPERS_CATALOG_URL=https://papers.yourdomain.com/catalog.json
+CATALOG_REVALIDATE_SECONDS=3600
+```
+
+## API Endpoints
+
+### `GET /api/health`
+
+Confirms the service is deployed and whether `PAPERS_CATALOG_URL` is configured.
+
+### `GET /api/pairs`
+
+Returns only papers with both a question paper and mark scheme.
+
+```bash
+curl "https://your-vercel-app.vercel.app/api/pairs?level=GCSE&subject=Maths&board=AQA&pageSize=10"
+```
+
+### `GET /api/papers`
+
+Returns searchable paper records. Query params:
+
+```text
+q          Free-text search
+level      GCSE or A-Level
+subject    Maths, Biology, Psychology, etc.
+board      AQA, OCR, Edexcel, Pearson Edexcel, WJEC, Eduqas, CCEA
+year       2024, 2023, etc.
+session    June, November, Specimen, etc.
+type       question_paper or mark_scheme
+paired     true to only return complete pairs
+page       Default 1
+pageSize   Default 25, max 100
+```
+
+### `GET /api/metadata`
+
+Returns levels, subjects, boards, years, sessions, and counts.
+
+## App Usage
+
+Your main app can call:
+
+```ts
+const response = await fetch(
+  "https://your-vercel-app.vercel.app/api/pairs?level=GCSE&subject=Maths&board=AQA"
+);
+const papers = await response.json();
+```
+
+Each paper includes:
+
+```ts
+paper.questionPaperUrl
+paper.markSchemeUrl
+paper.files.questionPaper?.url
+paper.files.markScheme?.url
+```
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.

@@ -1,65 +1,92 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <main className="min-h-screen bg-[#f7f8f3] text-[#151515]">
+      <section className="border-b border-[#d9ddd2] bg-white">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 sm:px-10 lg:px-12">
+          <div className="flex flex-col gap-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#007f73]">
+              Alora Exam API
+            </p>
+            <h1 className="max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl">
+              ALORA PAST PAPER API
+            </h1>
+            <p className="max-w-2xl text-lg leading-8 text-[#4f564d]">
+              Deploy this on Vercel, store PDFs in a public Cloudflare R2 bucket,
+              and point the API at the R2-hosted catalogue.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              className="rounded-lg border border-[#151515] bg-[#151515] px-4 py-3 text-center text-sm font-semibold text-white"
+              href="/api/pairs?level=GCSE&subject=Maths&pageSize=5"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
+              Try paired papers
+            </a>
             <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              className="rounded-lg border border-[#b9c2b1] bg-white px-4 py-3 text-center text-sm font-semibold text-[#151515]"
+              href="/api/health"
             >
-              Learning
-            </a>{" "}
-            center.
+              Check health
+            </a>
+            <a
+              className="rounded-lg border border-[#b9c2b1] bg-white px-4 py-3 text-center text-sm font-semibold text-[#151515]"
+              href="https://dash.cloudflare.com"
+            >
+              Open Cloudflare
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-12 sm:px-10 lg:grid-cols-[1fr_1fr] lg:px-12">
+        <div className="space-y-5">
+          <h2 className="text-2xl font-semibold">Vercel Environment</h2>
+          <p className="leading-7 text-[#4f564d]">
+            Add these variables to Vercel after you upload the generated
+            catalogue to R2.
           </p>
+          <pre className="overflow-x-auto rounded-lg border border-[#d9ddd2] bg-white p-4 text-sm leading-6 text-[#22312d]">
+            <code>{`PAPERS_CATALOG_URL=https://papers.yourdomain.com/catalog.json
+NEXT_PUBLIC_PAPERS_CATALOG_URL=https://papers.yourdomain.com/catalog.json
+CATALOG_REVALIDATE_SECONDS=3600`}</code>
+          </pre>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="space-y-5">
+          <h2 className="text-2xl font-semibold">Generate Catalogue</h2>
+          <p className="leading-7 text-[#4f564d]">
+            Run this locally where the `A-Level` and `GCSE` folders exist, then
+            upload `dist/catalog.json` to your R2 bucket.
+          </p>
+          <pre className="overflow-x-auto rounded-lg border border-[#d9ddd2] bg-white p-4 text-sm leading-6 text-[#22312d]">
+            <code>{`PAPERS_ROOT=/Users/paramveer/Desktop/Alora_PastPaperApi \\
+PUBLIC_PAPERS_BASE_URL=https://papers.yourdomain.com \\
+npm run catalog`}</code>
+          </pre>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="border-t border-[#d9ddd2] bg-white">
+        <div className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-10 lg:px-12">
+          <h2 className="text-2xl font-semibold">Endpoints</h2>
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {[
+              ["/api/pairs", "Only papers that have question paper and mark scheme."],
+              ["/api/papers", "Search and filter the full public catalogue."],
+              ["/api/metadata", "Levels, subjects, boards, years, and counts."],
+              ["/api/health", "Confirms the API is deployed and catalogue URL is set."],
+            ].map(([path, description]) => (
+              <div key={path} className="rounded-lg border border-[#d9ddd2] p-5">
+                <p className="font-mono text-sm font-semibold text-[#c1432e]">
+                  GET {path}
+                </p>
+                <p className="mt-3 leading-7 text-[#4f564d]">{description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
