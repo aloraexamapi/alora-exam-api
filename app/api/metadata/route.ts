@@ -1,10 +1,15 @@
 import { getCatalog } from "@/app/lib/catalog";
+import { corsOptions, jsonWithCors } from "@/app/lib/http";
+
+export function OPTIONS() {
+  return corsOptions();
+}
 
 export async function GET() {
   try {
     const catalog = await getCatalog();
 
-    return Response.json({
+    return jsonWithCors({
       generatedAt: catalog.generatedAt,
       baseUrl: catalog.baseUrl,
       counts: catalog.counts,
@@ -13,7 +18,7 @@ export async function GET() {
   } catch (error) {
     console.error(error);
 
-    return Response.json(
+    return jsonWithCors(
       {
         error: "Catalog unavailable",
         hint: "Set PAPERS_CATALOG_URL to your public R2 catalog.json URL.",
