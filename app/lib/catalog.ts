@@ -66,7 +66,7 @@ export async function getCatalog(): Promise<Catalog> {
 
 export function filterPapers(papers: CatalogPaper[], searchParams: URLSearchParams) {
   const q = String(searchParams.get("q") || "").trim().toLowerCase();
-  const type = searchParams.get("type");
+  const type = searchParams.get("type") || searchParams.get("documentType");
   const paired = truthy(searchParams.get("paired")) || truthy(searchParams.get("complete"));
 
   return papers.filter((paper) => {
@@ -74,16 +74,16 @@ export function filterPapers(papers: CatalogPaper[], searchParams: URLSearchPara
       return false;
     }
 
-    if (!matchesFilter(paper.level, searchParams.get("level"))) {
+    if (!matchesExactFilter(paper.level, searchParams.get("level"))) {
       return false;
     }
 
-    if (!matchesFilter(paper.subject, searchParams.get("subject"))) {
+    if (!matchesSubjectFilter(paper.subject, searchParams.get("subject"))) {
       return false;
     }
 
     if (
-      !matchesFilter(
+      !matchesBoardFilter(
         paper.examBoard,
         searchParams.get("board") || searchParams.get("examBoard")
       )
@@ -91,11 +91,11 @@ export function filterPapers(papers: CatalogPaper[], searchParams: URLSearchPara
       return false;
     }
 
-    if (!matchesFilter(paper.year, searchParams.get("year"))) {
+    if (!matchesExactFilter(paper.year, searchParams.get("year"))) {
       return false;
     }
 
-    if (!matchesFilter(paper.session, searchParams.get("session"))) {
+    if (!matchesExactFilter(paper.session, searchParams.get("session"))) {
       return false;
     }
 
@@ -114,7 +114,7 @@ export function filterPapers(papers: CatalogPaper[], searchParams: URLSearchPara
 export function paginatePapers(papers: CatalogPaper[], searchParams: URLSearchParams) {
   const page = Math.max(1, Number(searchParams.get("page") || 1));
   const pageSize = clamp(
-    Number(searchParams.get("pageSize") || DEFAULT_PAGE_SIZE),
+    Number(searchParams.get("pageSize") || searchParams.get("limit") || DEFAULT_PAGE_SIZE),
     1,
     MAX_PAGE_SIZE
   );
@@ -159,10 +159,10 @@ function hasDocumentType(paper: CatalogPaper, type: string) {
     ...paper.files.markSchemes.map((document) => document.type),
   ];
 
-  return documentTypes.some((documentType) => matchesFilter(documentType, type));
+  return documentTypes.some((documentType) => matchesExactFilter(documentType, type));
 }
 
-function matchesFilter(actual: unknown, expected: string | null) {
+function matchesExactFilter(actual: unknown, expected: string | null) {
   if (!expected) {
     return true;
   }
@@ -174,10 +174,31 @@ function matchesFilter(actual: unknown, expected: string | null) {
   const normalizedActual = normalizeFilterValue(actual);
   const normalizedExpected = normalizeFilterValue(expected);
 
-  return (
-    normalizedActual === normalizedExpected ||
-    normalizedActual.includes(normalizedExpected)
-  );
+  return normalizedActual === normalizedExpected;
+}
+
+function matchesSubjectFilter(actual: unknown, expected: string | null) {
+  if (!expected) {
+    return true;
+  }
+
+  if (actual === null || actual === undefined) {
+    return false;
+  }
+
+  return canonicalSubject(actual) === canonicalSubject(expected);
+}
+
+function matchesBoardFilter(actual: unknown, expected: string | null) {
+  if (!expected) {
+    return true;
+  }
+
+  if (actual === null || actual === undefined) {
+    return false;
+  }
+
+  return canonicalBoard(actual) === canonicalBoard(expected);
 }
 
 function normalizeFilterValue(value: unknown) {
@@ -185,6 +206,46 @@ function normalizeFilterValue(value: unknown) {
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "");
+}
+
+function canonicalSubject(value: unknown) {
+  const normalized = normalizeFilterValue(value);
+  const aliases: Record<string, string> = {
+    math: "maths",
+    maths: "maths",
+    mathematics: "maths",
+    furthermaths: "furthermaths",
+    furthermathematics: "furthermaths",
+    statistics: "statistics",
+    stats: "statistics",
+    businessstudies: "business",
+    business: "business",
+    physicaleducationpe: "physicaleducation",
+    physicaleducation: "physicaleducation",
+    pe: "physicaleducation",
+    religiousstudiesrs: "religiousstudies",
+    religiousstudies: "religiousstudies",
+    rs: "religiousstudies",
+    dramaandtheatre: "drama",
+    drama: "drama",
+  };
+
+  return aliases[normalized] || normalized;
+}
+
+function canonicalBoard(value: unknown) {
+  const normalized = normalizeFilterValue(value);
+  const aliases: Record<string, string> = {
+    edexcel: "edexcel",
+    pearsonedexcel: "edexcel",
+    pearson: "edexcel",
+    cie: "cambridge",
+    caie: "cambridge",
+    cambridge: "cambridge",
+    cambridgeinternational: "cambridge",
+  };
+
+  return aliases[normalized] || normalized;
 }
 
 function clamp(value: number, min: number, max: number) {

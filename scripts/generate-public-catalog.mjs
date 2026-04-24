@@ -123,7 +123,8 @@ function buildCatalog(rootDir) {
       continue;
     }
 
-    const [level, subject, collection, paperFolder] = parts;
+    const [level, rawSubject, collection, paperFolder] = parts;
+    const subject = parseSubject(rawSubject, collection);
     const relativePaperPath = parts.slice(0, 4).join("/");
     const documentType = parseDocumentType(parts[parts.length - 1]);
     const documentId = makeId("doc", relativePath);
@@ -291,6 +292,43 @@ function parseExamBoard(collection) {
   return board || collection.split(" ")[0];
 }
 
+function parseSubject(subjectFolder, collection) {
+  const normalizedCollection = normalizeSubjectSource(collection);
+  const normalizedSubject = normalizeSubjectSource(subjectFolder);
+
+  if (
+    normalizedCollection.includes("furthermaths") ||
+    normalizedCollection.includes("furthermathematics")
+  ) {
+    return "Further Maths";
+  }
+
+  if (normalizedCollection.includes("statistics")) {
+    return "Statistics";
+  }
+
+  return canonicalSubjectFolder(subjectFolder, normalizedSubject);
+}
+
+function canonicalSubjectFolder(subjectFolder, normalizedSubject) {
+  const aliases = {
+    businessstudies: "Business",
+    dramaandtheatre: "Drama",
+    math: "Maths",
+    maths: "Maths",
+    mathematics: "Maths",
+    mathsfurthermathsandstatistics: "Maths",
+    pe: "Physical Education",
+    physicaleducation: "Physical Education",
+    physicaleducationpe: "Physical Education",
+    religiousstudies: "Religious Studies",
+    religiousstudiesrs: "Religious Studies",
+    rs: "Religious Studies",
+  };
+
+  return aliases[normalizedSubject] || subjectFolder;
+}
+
 function parsePaperFolder(folderName) {
   const normalized = normalizeDashes(folderName);
   const examCode =
@@ -431,6 +469,13 @@ function compareDocuments(a, b) {
 
 function normalizeDashes(value) {
   return value.replace(/[–—]/g, "-");
+}
+
+function normalizeSubjectSource(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
 }
 
 function makeId(prefix, value) {
